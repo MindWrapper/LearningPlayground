@@ -1,10 +1,12 @@
+.data
+
 #.gitignore for python
 # Byte-compiled / optimized / DLL files
 __pycache__/
 .DS_Store
 *.py[cod]
 *$py.class
-
+*.pkl
 # C extensions
 *.so
 
