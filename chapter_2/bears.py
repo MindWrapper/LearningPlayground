@@ -1,34 +1,50 @@
+
 import os
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from dotenv import load_dotenv
-
-load_dotenv('/Users/yan/.secrets/fast.ai/.env')
-
-# this way we can train models withut GPU support
-os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-
-# to setup asuze web search, see https://stackoverflow.com/questions/65706220/fast-ai-course-2020-httperror-401-client-error-permissiondenied-for-url
-AZURE_KEY = os.environ.get('AZURE_SEARCH_KEY')
-
 import fastbook
 from fastbook import *
 from fastai.vision.widgets import *
+import argparse
+# tell python to search for for various shared utility scripts in "shared" directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from download import download_images_for_types
 
+# train:
+# go get azure tokens use # to setup asuze web search, see https://stackoverflow.com/questions/65706220/fast-ai-course-2020-httperror-401-client-error-permissiondenied-for-url
+# main.py --train --main-category="bear" --sub-categories="grizzly,black,teddy" --azure-key="AZURE_SEARCH_KEY"
+# Recognize:  main.py --model=xxx --recognize="teddy.png"
+
+# Set up command line arguments
+parser = argparse.ArgumentParser(description="Process some arguments.")
+parser.add_argument("--train", action="store_true", help="train the model")
+parser.add_argument("--main-category", type=str, help="the main category")
+parser.add_argument("--save-model-as", type=str, help="the name of the model to save. e.g. bears.pkl")
+parser.add_argument("--sub-categories", type=str, help="the subcategories, separated by commas")
+args = parser.parse_args()
+
+train = args.train
+main_category = args.main_category
+sub_categories = args.sub_categories.split(",") if args.sub_categories else []
+model_file_name= args.save_model_as
+
+
+# this way we can train models without GPU support
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+
+
 # this will let us to see windows with images. almost like in jypiter notebook :) 
+# TODO: check if this is true
 plt.ion()
 
+# TODO: check if this is needed
 fastbook.setup_book()
-data_dir = os.path.dirname(os.path.abspath(__file__)) + "/.data"
-download_images_for_types(data_dir, AZURE_KEY, ['grizzly','black','teddy'])
 
-# cleanup up images
-fns = get_image_files(data_dir)
-failed = verify_images(fns)
-failed.map(Path.unlink)
+data_dir = os.path.dirname(os.path.abspath(__file__)) + "/.data"
+models_dir = os.path.dirname(os.path.abspath(__file__)) + "/.models"
+
+download_images_for_types(data_dir, main_category, sub_categories)
 
 bears = DataBlock(
     blocks=(ImageBlock, CategoryBlock),  # independent variable(images), dependent variable(category - types of bears)
@@ -67,8 +83,10 @@ dls = bears.dataloaders(data_dir)
 #     batch_tfms=aug_transforms())
 # dls = bears.dataloaders(path)
 
-found_trained_model = Path('export.pkl').exists()
-if not found_trained_model:
+model_file_path = Path(models_dir).joinpath(model_file_name)
+
+if not  model_file_path.exists():
+    Path(models_dir).mkdir(parents=True, exist_ok=True)
     learn = vision_learner(dls, resnet18, metrics=error_rate)
     learn.fine_tune(4)
     
@@ -94,11 +112,12 @@ if not found_trained_model:
     # re-learn on the cleaned data
     learn.fine_tune(4)
 
-    learn.export("export.pkl")
+    learn.export(model_file_path)
 
-learn_inf = load_learner('export.pkl')
+learn_inf = load_learner(model_file_path)
 
 print()
+
 print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy.png'))
 print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/grizly.jpeg'))
 print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy2.png'))
