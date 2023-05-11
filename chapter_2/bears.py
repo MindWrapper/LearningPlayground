@@ -1,7 +1,5 @@
 
 import os
-#os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
 import sys
 import fastbook
 from fastbook import *
@@ -9,11 +7,11 @@ from fastai.vision.widgets import *
 import argparse
 # tell python to search for for various shared utility scripts in "shared" directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from download import download_images_for_types
+from chapter_2.download import download_images_for_types
 
 # train:
 # go get azure tokens use # to setup asuze web search, see https://stackoverflow.com/questions/65706220/fast-ai-course-2020-httperror-401-client-error-permissiondenied-for-url
-# main.py --train --main-category="bear" --sub-categories="grizzly,black,teddy" --azure-key="AZURE_SEARCH_KEY"
+# python3.11 bears.py --save-model-as=bears.pkl --main-category=bear --sub-categories="grizzly,black,teddy" --save-mode-as="bears.pkl"
 # Recognize:  main.py --model=xxx --recognize="teddy.png"
 
 # Set up command line arguments
@@ -32,7 +30,6 @@ model_file_name= args.save_model_as
 
 # this way we can train models without GPU support
 os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
-
 
 # this will let us to see windows with images. almost like in jypiter notebook :) 
 # TODO: check if this is true
@@ -86,9 +83,10 @@ dls = bears.dataloaders(data_dir)
 model_file_path = Path(models_dir).joinpath(model_file_name)
 
 if not  model_file_path.exists():
+    print("Training model")
     Path(models_dir).mkdir(parents=True, exist_ok=True)
     learn = vision_learner(dls, resnet18, metrics=error_rate)
-    learn.fine_tune(4)
+    learn.fine_tune(1)
     
     # clean up the model
     interp = ClassificationInterpretation.from_learner(learn)
@@ -100,19 +98,21 @@ if not  model_file_path.exists():
 
     # unfortunately, we can't use this, cause it's not working with 
     # https://github.com/jupyter-widgets/ipywidgets/issues/3731
-    #cleaner = ImageClassifierCleaner(learn)
-    #cleaner
-    # for idx in cleaner.delete(): 
-    #     cleaner.fns[idx].unlink()
+    cleaner = ImageClassifierCleaner(learn)
+    cleaner
+    for idx in cleaner.delete(): 
+        cleaner.fns[idx].unlink()
 
     dls = bears.dataloaders(data_dir)
     print("retraining the model on cleaned data")
     learn = vision_learner(dls, resnet18, metrics=error_rate)
     
     # re-learn on the cleaned data
-    learn.fine_tune(4)
+    learn.fine_tune(1)
 
     learn.export(model_file_path)
+else:
+    print("Skipping fine-tuning of the model as it already exists at the following location:\n" + str(model_file_path.absolute()))
 
 learn_inf = load_learner(model_file_path)
 
@@ -120,4 +120,3 @@ print()
 
 print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy.png'))
 print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/grizly.jpeg'))
-print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy2.png'))
