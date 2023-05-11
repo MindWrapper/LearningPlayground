@@ -1,9 +1,9 @@
-
 import os
 import sys
 import fastbook
 from fastbook import *
 from fastai.vision.widgets import *
+from fastai.vision.all import *
 import argparse
 # tell python to search for for various shared utility scripts in "shared" directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -41,6 +41,8 @@ fastbook.setup_book()
 data_dir = os.path.dirname(os.path.abspath(__file__)) + "/.data"
 models_dir = os.path.dirname(os.path.abspath(__file__)) + "/.models"
 
+category_data_dir = Path(data_dir).joinpath(main_category)
+
 download_images_for_types(data_dir, main_category, sub_categories)
 
 bears = DataBlock(
@@ -64,7 +66,7 @@ bears = DataBlock(
     )
 
 # # dls includes validation set and training set
-dls = bears.dataloaders(data_dir)
+dls = bears.dataloaders(category_data_dir)
 
 # resize the images to 128x128
 # apply data augmentation to an entier batch_tfms
@@ -86,30 +88,14 @@ if not  model_file_path.exists():
     print("Training model")
     Path(models_dir).mkdir(parents=True, exist_ok=True)
     learn = vision_learner(dls, resnet18, metrics=error_rate)
-    learn.fine_tune(1)
+    learn.fine_tune(4)
     
-    # clean up the model
     interp = ClassificationInterpretation.from_learner(learn)
     interp.plot_confusion_matrix()
     input("Viewing confusion matrix. Press Enter to continue...")
 
     interp.plot_top_losses(6, nrows=2)
     input("Viewing Images that were incorectly classified...")
-
-    # unfortunately, we can't use this, cause it's not working with 
-    # https://github.com/jupyter-widgets/ipywidgets/issues/3731
-    cleaner = ImageClassifierCleaner(learn)
-    cleaner
-    for idx in cleaner.delete(): 
-        cleaner.fns[idx].unlink()
-
-    dls = bears.dataloaders(data_dir)
-    print("retraining the model on cleaned data")
-    learn = vision_learner(dls, resnet18, metrics=error_rate)
-    
-    # re-learn on the cleaned data
-    learn.fine_tune(1)
-
     learn.export(model_file_path)
 else:
     print("Skipping fine-tuning of the model as it already exists at the following location:\n" + str(model_file_path.absolute()))
@@ -118,5 +104,7 @@ learn_inf = load_learner(model_file_path)
 
 print()
 
-print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy.png'))
-print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/grizly.jpeg'))
+#print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/teddy.png'))
+#print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/grizly.jpeg'))
+
+print(learn_inf.predict( os.path.dirname(os.path.abspath(__file__))  + '/my_prs.jpg'))
