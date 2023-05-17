@@ -6,7 +6,7 @@ import argparse
 # --data-dir .data/guitars
 
 # TODO:  pass fine tune iterations as a command line argument
-def train(data_dir, force):
+def train(data_dir, force, fine_tune_iter):
     model_file_name = data_dir.split("/")[-1]
     model_file_path =  "./models/ " + model_file_name + ".pkl"
     if not force and Path(model_file_path).exists():
@@ -44,7 +44,7 @@ def train(data_dir, force):
     print("Training model.")
     Path("./models").mkdir(parents=True, exist_ok=True)
     learn = vision_learner(dls, resnet18, metrics=error_rate)
-    learn.fine_tune(4)
+    learn.fine_tune(fine_tune_iter)
     interp = ClassificationInterpretation.from_learner(learn)
     plt.ion()
     interp.plot_confusion_matrix()
@@ -57,8 +57,9 @@ def main():
     parser = argparse.ArgumentParser(description="Process arguments.")
     parser.add_argument("--data-dir", type=str, help="Folder with to train model on.")
     parser.add_argument("--force", action="store_true", help="Force learning even if model already exists.")
+    parser.add_argument("--fine-tune-iter", type=int, default=4, help="Number of fine tuning iterations")
     args = parser.parse_args()
-    model_saved_as = train(args.data_dir, args.force)
+    model_saved_as = train(args.data_dir, args.force, args.fine_tune_iter)
     print("Done. Model saved as " + model_saved_as)
 
 if __name__ == "__main__":
