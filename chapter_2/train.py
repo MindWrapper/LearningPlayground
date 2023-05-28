@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 # Define constants
 MODEL_DIR = "./models"
+
 DEFAULT_FINE_TUNE_ITER = 4
 
 def get_model_path(data_dir):
@@ -65,6 +66,7 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+    # PYTORCH_ENABLE_MPS_FALLBACK=1 python3.8 train.py --data-dir=./data/guitars --force 
     model_saved_as = train(args.data_dir, args.force, args.fine_tune_iter)
     print(f"Done. Model saved as {model_saved_as}")
 

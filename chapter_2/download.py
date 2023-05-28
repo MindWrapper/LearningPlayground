@@ -2,9 +2,9 @@ from fastbook import search_images_bing, download_images
 from dotenv import load_dotenv
 from fastbook import get_image_files, verify_images, Path
 import os
+import argparse
 
-def _cleanupImages(data_dir):
-    # cleanup up images
+def _cleanupInvalidImages(data_dir):
     fns = get_image_files(data_dir)
     failed = verify_images(fns)
     failed.map(Path.unlink) 
@@ -15,7 +15,6 @@ def download_images_for_types(baseDir, mainCategory, subcategories):
         print("Skipping image download because the directory already exists:\n" + str(path.absolute()) + "\nAssuming that the images have already been downloaded.")
         return 
 
-    # todo use find_dotenv
     load_dotenv('/Users/yan/.secrets/fast.ai/.env')
     azureKey = os.environ.get('AZURE_SEARCH_KEY')
 
@@ -28,4 +27,16 @@ def download_images_for_types(baseDir, mainCategory, subcategories):
         results = search_images_bing(azureKey, f'{o} {mainCategory}')
         download_images(dest, urls=results.attrgot('contentUrl'))
 
-    _cleanupImages(path)
+    _cleanupInvalidImages(path)
+
+def main():
+    parser = argparse.ArgumentParser(description="Process arguments.")
+    parser.add_argument("--main-category", type=str, help="Main category. `guitars`")
+    parser.add_argument("--sub-categories", type=str, help="Sub categories. Comma separated, no spaces. Example:'ESP,PRS,Gibson,PRS,Fender'")
+    args = parser.parse_args()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    baseDir = Path(script_dir).joinpath('data')
+    download_images_for_types(baseDir, args.main_category, args.sub_categories.split(','))
+
+if __name__ == "__main__":
+    main()
