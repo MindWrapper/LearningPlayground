@@ -15,7 +15,10 @@ def download_images_for_types(baseDir, mainCategory, subcategories):
         print("Skipping image download because the directory already exists:\n" + str(path.absolute()) + "\nAssuming that the images have already been downloaded.")
         return 
 
-    load_dotenv('/Users/yan/.secrets/fast.ai/.env')
+    home_dir = os.path.expanduser("~")
+    dotenv_path = os.path.join(home_dir, "secrets", "fast.ai", ".env")
+    load_dotenv(dotenv_path)
+    print("dotev path:" + dotenv_path)
     azureKey = os.environ.get('AZURE_SEARCH_KEY')
 
     path.mkdir(exist_ok=False, parents=True)
