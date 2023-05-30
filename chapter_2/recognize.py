@@ -14,4 +14,9 @@ models_dir = script_dir.joinpath("models")
 model_file_path = Path(models_dir).joinpath(args.model)
 learn_inf = load_learner(model_file_path)
 
-print(learn_inf.predict(args.image))
+pred_class, pred_idx, probs = learn_inf.predict(args.image)
+
+print(f"Predicted class: {pred_class}")
+print(f"Confidence: {probs[pred_idx]:.4f}")
+
+
