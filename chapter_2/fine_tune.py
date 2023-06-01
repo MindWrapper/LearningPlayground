@@ -23,7 +23,8 @@ def data_block():
     )
 
 def train_model(dls, fine_tune_iter):
-    learn = vision_learner(dls, resnet18, metrics=error_rate)
+    learn = vision_learner(dls, resnet152, metrics=error_rate)
+    #learn.lr_find()  # find learning rate
     learn.fine_tune(fine_tune_iter)
     return learn
 
@@ -44,9 +45,8 @@ def train(data_dir, force, fine_tune_iter):
         return model_file_path
 
     dls = data_block().dataloaders(data_dir)
-    dls.train.show_batch(max_n=8, nrows=2, unique=True)
-
-    print("Training model.")
+  
+    print("Fine-tunning model.")
     Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
     
     learn = train_model(dls, fine_tune_iter)
@@ -66,7 +66,6 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    # PYTORCH_ENABLE_MPS_FALLBACK=1 python3.8 train.py --data-dir=./data/guitars --force 
     model_saved_as = train(args.data_dir, args.force, args.fine_tune_iter)
     print(f"Done. Model saved as {model_saved_as}")
 

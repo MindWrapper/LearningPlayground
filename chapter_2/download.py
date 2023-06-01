@@ -4,6 +4,8 @@ from fastbook import get_image_files, verify_images, Path
 import os
 import argparse
 
+# separate data directory and category
+
 def _cleanupInvalidImages(data_dir):
     fns = get_image_files(data_dir)
     failed = verify_images(fns)
@@ -16,7 +18,7 @@ def download_images_for_types(baseDir, mainCategory, subcategories):
         return 
 
     home_dir = os.path.expanduser("~")
-    dotenv_path = os.path.join(home_dir, "secrets", "fast.ai", ".env")
+    dotenv_path = os.path.join(home_dir, ".secrets", "fast.ai", ".env")
     load_dotenv(dotenv_path)
     print("dotev path:" + dotenv_path)
     azureKey = os.environ.get('AZURE_SEARCH_KEY')
@@ -27,7 +29,7 @@ def download_images_for_types(baseDir, mainCategory, subcategories):
         print("Downloading images for " + o)
         dest = (path/o)
         dest.mkdir(exist_ok=True)
-        results = search_images_bing(azureKey, f'{o} {mainCategory}')
+        results = search_images_bing(azureKey, f'{o} {mainCategory}', max_images=300)
         download_images(dest, urls=results.attrgot('contentUrl'))
 
     _cleanupInvalidImages(path)
