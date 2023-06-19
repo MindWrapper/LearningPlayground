@@ -54,27 +54,30 @@ Working with a virtual environment can make the process simpler.
 
 Think about the kind of images you want your model to train with. Initially, I tried to recognize different brands of electric guitars, but it didn't work out well, possibly due to the similar appearances of electric guitars. On the other hand, fruit classification worked very well. 
 
-Run `python3.11 ./download.py --main-category="fruit" --data-dir=data/fruits --sub-categories="Banana,Apple,Pear"`. It might take a while and will cost you a few cents (if you're not on free trial credit).
+Download images 
+```commandline
+python3.11 ./download.py --main-category="fruit single" --sub-categories="Banana,Apple,Pear" --save-to=data/fruits
+``` 
 
-The downloaded data will be stored in `./data` (not included in git). The directory structure will look like this:
+It might take a while and will cost you a few cents (if you're not on free trialAzure credit).
+
+The downloaded data will be stored in `./data/fruits` (not included in git). The directory structure will look like this:
 
 ```
 data
     fruits
         Apple
-        Banan
+        Banana
         Pear
 ```
 
-Each leaf folder will contain corresponing images.
-
-Each leaf folder will contain corresponding images.
+Each leaf folder will contain corresponing images. Might be a good idea to clean it up a bit.
 
 # Fine-tune the Model 
 
 To train use: 
 ```commandline 
-PYTORCH_ENABLE_MPS_FALLBACK=1 python3.11 fine_tune.py --data-dir="data/fruits"
+PYTORCH_ENABLE_MPS_FALLBACK=1 python3.11 fine_tune.py --data-dir=./data/fruits --save-model-as=models/fruits.pkl
 ```
 
 # Classify an Image
@@ -83,11 +86,21 @@ A couple of test images can be found in the `./test_images` folder.
 
 Run 
 ```commandline 
-python3.11 ./classify.py --image=./test_images/apple.jpg --model=fruits.pkl
+python3.11 ./classify.py --image=./test_images/banana.jpg --model=models/fruits.pkl
 ```
 to get an output similar to:
 
 ```
-Predicted class: Apple
-Confidence: 0.9898
+Predicted class: Banana                                                                                                  
+Confidence: 0.9993
+```
+
+Run 
+```commandline 
+python3.11 ./classify.py --image=./test_images/banana.jpg --model=models/fruits.pkl
+```
+
+```commandline
+Predicted class: Apple                                                                                                   
+Confidence: 0.5690
 ```
