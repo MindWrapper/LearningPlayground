@@ -13,9 +13,8 @@ script_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 model_file_path = args.model
 learn_inf = load_learner(model_file_path)
 
+print(f"Classyfying image {args.image} using model: {model_file_path}...")
 pred_class, pred_idx, probs = learn_inf.predict(args.image)
 
 print(f"Predicted class: {pred_class}")
 print(f"Confidence: {probs[pred_idx]:.4f}")
-
-
