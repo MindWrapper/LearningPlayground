@@ -4,7 +4,6 @@ from fastbook import get_image_files, verify_images, Path
 import os
 import argparse
 
-# separate data directory and category
 def _cleanupInvalidImages(data_dir):
     fns = get_image_files(data_dir)
     failed = verify_images(fns)
